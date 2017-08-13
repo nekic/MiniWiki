@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>MiniWiki</title>
+    <link rel="stylesheet" href="/css/normalize.css">
+    <!-- ZUI 标准版压缩后的 CSS 文件 -->
+    <link rel="stylesheet" href="/plugins/zui/css/zui.min.css">
+    <link rel="stylesheet" href="/plugins/zui/css/zui-theme.css">
+
+    <!-- ZUI Javascript 依赖 jQuery -->
+    <script src="//cdnjs.cloudflare.com/ajax/libs/zui/1.7.0/lib/jquery/jquery.js"></script>
+    <!-- ZUI 标准版压缩后的 JavaScript 文件 -->
+    <script src="/plugins/zui/js/zui.min.js"></script>
+
+    <!-- markdown 解释器 -->
+    <script src="/plugins/marked/marked.min.js"></script>
+
+    <!-- 编辑器 -->
+    <script src="/plugins/codemirror/lib/codemirror.js"></script>
+    <link rel="stylesheet" href="/plugins/codemirror/lib/codemirror.css">
+    <script src="/plugins/codemirror/mode/markdown/markdown.js"></script>
+
+    <!-- 右键菜单 -->
+    <script src="/plugins/contextmenu/jquery.ui.position.min.js"></script>
+    <script src="/plugins/contextmenu/jquery.contextMenu.min.js"></script>
+    <link rel="stylesheet" href="/plugins/contextmenu/jquery.contextMenu.css">
+</head>
+<body>
+
+<div class="container-fluid">
+    <div class="row" style="height: 10px;"></div>
+    <div class="row">
+        <div class="col-md-3">
+            <div class="panel panel-primary">
+                <div class="panel-heading">
+                    <span id="menu-tag" class="label label-dot label-success"></span>
+                    <span id="toc-tag" class="label label-dot label-danger">Danger</span>
+                </div>
+                <div class="panel-body">
+                    <div id="menu-content" class="menu">
+                        <ul id="treeExample" class="tree tree-angles" data-ride="tree" data-animate="true"
+                            data-initial-state="preserve">
+                            <li>
+                                <a href="#sdfds" class="context-menu">水果</a>
+                                <ul>
+                                    <li><a href="#">苹果</a></li>
+                                    <li>
+                                        <a href="#">热带水果</a>
+                                        <ul>
+                                            <li><a href="#">香蕉</a></li>
+                                            <li><a href="#">芒果</a></li>
+                                            <li><a href="#">椰子</a></li>
+                                            <li><a href="#">菠萝</a></li>
+                                        </ul>
+                                    </li>
+                                    <li><a href="#">梨子</a></li>
+                                    <li><a href="#">草莓</a></li>
+                                    <li><a href="#">杏</a></li>
+                                    <li><a href="#">桃子</a></li>
+                                    <li><a href="#">梅子</a></li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </div>
+                    <div id="toc-content" class="toc" style="display: none">这里是目录/滚动监听</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-9">
+            <div class="panel panel-primary">
+                <div class="panel-heading">
+                    <span>/ 首页 / PHP / 命名空间</span>
+                    <span class="pull-right">
+                        <span style="cursor: pointer;display: none;" id="save-tag" class="label label-badge label-success">&nbsp;</span>
+                        <span>&nbsp;</span>
+                        <span style="cursor: pointer" id="html-tag" class="view-switch-html label label-badge label-warning">&nbsp;</span>
+                        <span>&nbsp;</span>
+                        <span style="cursor: pointer" id="mark-tag" class="view-switch-mark label label-badge label-danger">&nbsp;</span>
+                    </span>
+                </div>
+                <div class="panel-body">
+                    <div id="html-content">这是html内容</div>
+                    <div id="mark-content" style="display: none">
+                        <textarea id="editor"></textarea>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+
+    var editor = CodeMirror.fromTextArea(document.getElementById("editor"), {
+        mode: "markdown"
+    });
+
+    $('#html-tag').click(function () {
+        $('#save-tag').hide();
+        $('#mark-content').hide();
+        $('#html-content').show();
+    });
+
+    $('#mark-tag').click(function () {
+        $('#save-tag').show();
+        $('#mark-content').show();
+        $('#html-content').hide();
+    });
+
+    $('#menu-tag').click(function () {
+        $('#toc-content').hide();
+        $('#menu-content').show();
+    });
+
+    $('#toc-tag').click(function () {
+        $('#menu-content').hide();
+        $('#toc-content').show();
+    });
+
+
+    $(function() {
+        $.contextMenu({
+            selector: '.context-menu',
+            callback: function(key, options) {
+                var m = "clicked: " + key;
+                window.console && console.log(m) || alert(m);
+                console.log(options.$trigger.href());
+            },
+            items: {
+                "newRoot": {
+                    name: "新建顶级分类",
+                    icon: "edit",
+                    callback: function(key, options) {
+                        var m = "edit was clicked";
+                        window.console && console.log(m) || alert(m);
+                    }
+                },
+                "newCategory": {name: "新建子分类", icon: "cut"},
+                "newNote": {name: "新建笔记", icon: "copy"},
+                "rename": {name: "重命名", icon: "paste"},
+                "delete": {name: "删除笔记", icon: "delete"},
+                "move": {name: "移动", icon: "delete"},
+                "sep1": "---------",
+                "close": {name: "关闭", icon: function(){
+                    return 'context-menu-icon context-menu-icon-quit';
+                }}
+            }
+        });
+
+        $('.context-menu-one').on('click', function(e){
+            console.log('clicked', this);
+        })
+    });
+
+</script>
+</body>
+
+</html>
