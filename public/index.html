@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="/plugins/zui/css/zui-theme.css">
 
     <!-- ZUI Javascript 依赖 jQuery -->
-    <script src="//cdnjs.cloudflare.com/ajax/libs/zui/1.7.0/lib/jquery/jquery.js"></script>
+    <script src="/plugins/jquery/jquery-1.11.3.min.js"></script>
     <!-- ZUI 标准版压缩后的 JavaScript 文件 -->
     <script src="/plugins/zui/js/zui.min.js"></script>
 
@@ -27,6 +27,13 @@
     <script src="/plugins/contextmenu/jquery.ui.position.min.js"></script>
     <script src="/plugins/contextmenu/jquery.contextMenu.min.js"></script>
     <link rel="stylesheet" href="/plugins/contextmenu/jquery.contextMenu.css">
+
+    <!-- 弹出层 -->
+    <script src="/plugins/vex/js/vex.combined.min.js"></script>
+    <script>vex.defaultOptions.className = 'vex-theme-wireframe'</script>
+    <link rel="stylesheet" href="/plugins/vex/css/vex.css">
+    <link rel="stylesheet" href="/plugins/vex/css/vex-theme-wireframe.css">
+
 </head>
 <body>
 
@@ -37,32 +44,13 @@
             <div class="panel panel-primary">
                 <div class="panel-heading">
                     <span id="menu-tag" class="label label-dot label-success"></span>
-                    <span id="toc-tag" class="label label-dot label-danger">Danger</span>
+
                 </div>
                 <div class="panel-body">
                     <div id="menu-content" class="menu">
-                        <ul id="treeExample" class="tree tree-angles" data-ride="tree" data-animate="true"
+                        <ul id="menu-tree" class="tree tree-angles" data-ride="tree"
                             data-initial-state="preserve">
-                            <li>
-                                <a href="#sdfds" class="context-menu">水果</a>
-                                <ul>
-                                    <li><a href="#">苹果</a></li>
-                                    <li>
-                                        <a href="#">热带水果</a>
-                                        <ul>
-                                            <li><a href="#">香蕉</a></li>
-                                            <li><a href="#">芒果</a></li>
-                                            <li><a href="#">椰子</a></li>
-                                            <li><a href="#">菠萝</a></li>
-                                        </ul>
-                                    </li>
-                                    <li><a href="#">梨子</a></li>
-                                    <li><a href="#">草莓</a></li>
-                                    <li><a href="#">杏</a></li>
-                                    <li><a href="#">桃子</a></li>
-                                    <li><a href="#">梅子</a></li>
-                                </ul>
-                            </li>
+
                         </ul>
                     </div>
                     <div id="toc-content" class="toc" style="display: none">这里是目录/滚动监听</div>
@@ -74,11 +62,11 @@
                 <div class="panel-heading">
                     <span>/ 首页 / PHP / 命名空间</span>
                     <span class="pull-right">
-                        <span style="cursor: pointer;display: none;" id="save-tag" class="label label-badge label-success">&nbsp;</span>
+                        <i style="cursor: pointer;display: none;" id="save-tag" class="icon icon-save"></i>
                         <span>&nbsp;</span>
-                        <span style="cursor: pointer" id="html-tag" class="view-switch-html label label-badge label-warning">&nbsp;</span>
+                        <i style="cursor: pointer;display: none;" id="html-tag" class="icon icon-html5"></i>
                         <span>&nbsp;</span>
-                        <span style="cursor: pointer" id="mark-tag" class="view-switch-mark label label-badge label-danger">&nbsp;</span>
+                        <i style="cursor: pointer" id="mark-tag"  class="icon icon-code"></i>
                     </span>
                 </div>
                 <div class="panel-body">
@@ -96,41 +84,50 @@
 
 <script>
 
+    var myTreeData = <?= $trees?>;
+
+    $('#menu-tree').tree({data: myTreeData});
+
     var editor = CodeMirror.fromTextArea(document.getElementById("editor"), {
-        mode: "markdown"
+        mode: "markdown",
+        value: "在此处输入内容..."
     });
 
     $('#html-tag').click(function () {
         $('#save-tag').hide();
+        $(this).hide();
+        $('#mark-tag').show();
         $('#mark-content').hide();
         $('#html-content').show();
     });
 
     $('#mark-tag').click(function () {
         $('#save-tag').show();
+        $('#html-tag').show();
+        $(this).hide();
         $('#mark-content').show();
         $('#html-content').hide();
     });
 
     $('#menu-tag').click(function () {
-        $('#toc-content').hide();
-        $('#menu-content').show();
+
+        $(this).hasClass('label-success') ? $(this).toggleClass('label-success') && $(this).toggleClass('label-danger') : $(this).toggleClass('label-danger') && $(this).toggleClass('label-success');
+
+        $('#toc-content').toggle();
+        $('#menu-content').toggle();
     });
 
-    $('#toc-tag').click(function () {
-        $('#menu-content').hide();
-        $('#toc-content').show();
-    });
+
 
 
     $(function() {
         $.contextMenu({
             selector: '.context-menu',
-            callback: function(key, options) {
-                var m = "clicked: " + key;
-                window.console && console.log(m) || alert(m);
-                console.log(options.$trigger.href());
-            },
+//            callback: function(key, options) {
+//                var m = "clicked: " + key;
+//                window.console && console.log(m) || alert(m);
+//                console.log(options.$trigger.href());
+//            },
             items: {
                 "newRoot": {
                     name: "新建顶级分类",
@@ -141,7 +138,20 @@
                     }
                 },
                 "newCategory": {name: "新建子分类", icon: "cut"},
-                "newNote": {name: "新建笔记", icon: "copy"},
+                "newNote": {
+                    name: "新建笔记",
+                    icon: "copy",
+                    callback: function (key, options) {
+                        var element = this;
+                        vex.dialog.prompt({
+                            message: '输入新建笔记名称',
+                            placeholder: '新建笔记',
+                            callback: function (value) {
+                                addNote(value, element);
+                            }
+                        });
+                    }
+                },
                 "rename": {name: "重命名", icon: "paste"},
                 "delete": {name: "删除笔记", icon: "delete"},
                 "move": {name: "移动", icon: "delete"},
@@ -156,6 +166,10 @@
             console.log('clicked', this);
         })
     });
+
+    function addNote(value,element) {
+
+    }
 
 </script>
 </body>
