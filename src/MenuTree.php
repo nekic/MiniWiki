@@ -15,6 +15,26 @@ class MenuTree
         return $tree;
     }
 
+    public static function getTreeArray()
+    {
+        $tree = include '../src/tree.php';
+        return $tree;
+    }
+
+    public static function genDynamicTree($tree)
+    {
+        foreach ($tree as $id => &$row) {
+
+            $type = 'dir';
+            if($row['type']) { // 是文件
+                $type = 'file';
+            }
+            $row['html'] = "<span class='context-menu' data-id='{$id}' data-pid='{$row['pid']}' data-type='{$type}'>{$row['title']}</span>";
+        }
+        $treeArr = self::makeTree($tree);
+        return $treeArr;
+    }
+
 
 
 
@@ -22,7 +42,12 @@ class MenuTree
     {
         $tree = include '../src/tree.php';
         foreach ($tree as $id => &$row) {
-            $row['html'] = '<span class="context-menu" data-pid="44">'.$row['title'].'</span>';
+
+            $type = 'dir';
+            if($row['type']) { // 是文件
+                $type = 'file';
+            }
+            $row['html'] = "<span class='context-menu' data-id='{$id}' data-pid='{$row['pid']}' data-type='{$type}'>{$row['title']}</span>";
         }
         return $tree;
     }

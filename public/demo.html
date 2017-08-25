@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <!-- 弹出层 -->
+    <script src="/plugins/jquery/jquery-1.11.3.min.js"></script>
+    <script src="/plugins/vex/js/vex.combined.min.js"></script>
+    <script>vex.defaultOptions.className = 'vex-theme-wireframe'</script>
+    <link rel="stylesheet" href="/plugins/vex/css/vex.css">
+    <link rel="stylesheet" href="/plugins/vex/css/vex-theme-wireframe.css">
+
+    <title>Title</title>
+</head>
+<body>
+<div>Hellow</div>
+</body>
+<script>
+    vex.dialog.prompt({
+        message: 'What planet did the aliens come from?',
+        placeholder: 'Planet name',
+        callback: function (value) {
+            console.log(value)
+        }
+    })
+</script>
+</html>

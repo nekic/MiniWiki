@@ -5,6 +5,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>MiniWiki</title>
+    <link rel="stylesheet" href="css/typo.css">
     <link rel="stylesheet" href="/css/normalize.css">
     <!-- ZUI 标准版压缩后的 CSS 文件 -->
     <link rel="stylesheet" href="/plugins/zui/css/zui.min.css">
@@ -34,6 +35,20 @@
     <link rel="stylesheet" href="/plugins/vex/css/vex.css">
     <link rel="stylesheet" href="/plugins/vex/css/vex-theme-wireframe.css">
 
+    <!-- 代码高亮 -->
+    <link rel="stylesheet" href="./plugins/highlight/styles/darcula.css">
+    <script src="./plugins/highlight/highlight.pack.js"></script>
+    <script>hljs.initHighlightingOnLoad();</script>
+    <style>
+        pre {
+            padding: 0px;
+            border-radius: 0;
+        }
+        .CodeMirror {
+            height: 800px;
+        }
+
+    </style>
 </head>
 <body>
 
@@ -62,6 +77,7 @@
                 <div class="panel-heading">
                     <span>/ 首页 / PHP / 命名空间</span>
                     <span class="pull-right">
+                        <span style="display: none" id="current-note-id" data-note-id=""></span>
                         <i style="cursor: pointer;display: none;" id="save-tag" class="icon icon-save"></i>
                         <span>&nbsp;</span>
                         <i style="cursor: pointer;display: none;" id="html-tag" class="icon icon-html5"></i>
@@ -70,7 +86,7 @@
                     </span>
                 </div>
                 <div class="panel-body">
-                    <div id="html-content">这是html内容</div>
+                    <div id="html-content" class="typo">这是html内容</div>
                     <div id="mark-content" style="display: none">
                         <textarea id="editor"></textarea>
                     </div>
@@ -90,8 +106,33 @@
 
     var editor = CodeMirror.fromTextArea(document.getElementById("editor"), {
         mode: "markdown",
+        lineWrapping: true,
+        autofocus: true,
         value: "在此处输入内容..."
     });
+
+    var rendererMD = new marked.Renderer();
+    marked.setOptions({
+        renderer: rendererMD,
+        gfm: true,
+        tables: true,
+        breaks: false,
+        pedantic: false,
+        sanitize: false,
+        smartLists: true,
+        smartypants: false
+    });
+
+//    marked.setOptions({
+//        highlight: function (code) {
+//            return hljs.highlightAuto(code).value;
+//        }
+//    });
+//    marked.setOptions({
+//        highlight: function (code) {
+//            return hljs.highlightAuto(code).value;
+//        }
+//    });
 
     $('#html-tag').click(function () {
         $('#save-tag').hide();
@@ -130,31 +171,72 @@
 //            },
             items: {
                 "newRoot": {
-                    name: "新建顶级分类",
-                    icon: "edit",
-                    callback: function(key, options) {
-                        var m = "edit was clicked";
-                        window.console && console.log(m) || alert(m);
+                    name: "顶级分类",
+                    callback: function (key, options) {
+                        var element = this;
+                        vex.dialog.prompt({
+                            message: '输入顶级分类名称',
+                            placeholder: '新建顶级分类',
+                            callback: function (value) {
+                                createNewRoot(value, element);
+                            }
+                        });
                     }
                 },
-                "newCategory": {name: "新建子分类", icon: "cut"},
+                "newCategory": {
+                    name: "新建分类",
+                    callback: function (key, options) {
+                        var element = this;
+                        vex.dialog.prompt({
+                            message: '输入新建分类名称',
+                            placeholder: '新建分类',
+                            callback: function (value) {
+                                createNewCategory(value, element);
+                            }
+                        });
+                    }
+                },
                 "newNote": {
                     name: "新建笔记",
-                    icon: "copy",
                     callback: function (key, options) {
                         var element = this;
                         vex.dialog.prompt({
                             message: '输入新建笔记名称',
                             placeholder: '新建笔记',
                             callback: function (value) {
-                                addNote(value, element);
+                                createNewNote(value, element);
                             }
                         });
                     }
                 },
-                "rename": {name: "重命名", icon: "paste"},
-                "delete": {name: "删除笔记", icon: "delete"},
-                "move": {name: "移动", icon: "delete"},
+                "rename": {
+                    name: "重命名",
+                    callback: function (key, options) {
+                        var element = this;
+                        var oldName = element.html();
+                        vex.dialog.prompt({
+                            message: '重命名【' + oldName + '】',
+                            placeholder: '输入新名称',
+                            callback: function (value) {
+                                rename(value, element);
+                            }
+                        });
+                    }
+                },
+                "delete": {
+                    name: "删除",
+                    callback: function (key, options) {
+                        var element = this;
+                        var oldName = element.html();
+                        vex.dialog.confirm({
+                            message: '删除【' + oldName + '】？',
+                            callback: function (value) {
+                                delItems(value, element);
+                            }
+                        })
+                    }
+                },
+                "move": {name: "移动"},
                 "sep1": "---------",
                 "close": {name: "关闭", icon: function(){
                     return 'context-menu-icon context-menu-icon-quit';
@@ -167,8 +249,194 @@
         })
     });
 
-    function addNote(value,element) {
+    $('#menu-content').on('click','.context-menu',function () {
+        var id = $(this).attr('data-id');
+        if($(this).attr('data-type')=='file') {
+            $('#current-note-id').attr('data-note-id',id);
+            $.get('/index.php?c=Notes&a=get',{id:id},function (result) {
+                if (result.status) { // 成功，重载树形结构
+                    $('#html-content').html(marked(result.content));
+                    $('pre code').each(function(i, block) {
+                        hljs.highlightBlock(block);
+                    });
+                    editor.setValue(result.content);
+                } else {
+                    vex.dialog.alert('操作失败');
+                }
+            },'json');
+        }
+    });
 
+    $('#save-tag').click(function () {
+        var id = $('#current-note-id').attr('data-note-id');
+        var content = editor.getValue();
+
+        var postData = {
+            content : content,
+            id   : id
+        };
+
+        $.post('/index.php?c=Notes&a=save',postData,function (result) {
+            if (result.status) { // 成功，重载树形结构
+                vex.dialog.alert('保存成功');
+
+            } else {
+                vex.dialog.alert('操作失败');
+            }
+        },'json');
+
+    });
+
+    function rename(value,element) {
+    if(!value) {
+        return false;
+    }
+    var id = $(element).attr('data-id');
+
+    var postData = {
+        name : value,
+        id   : id
+    };
+
+    $.post('/index.php?c=Notes&a=rename',postData,function (result) {
+        if (result.status) { // 成功，重载树形结构
+
+            var myTree = $('#menu-tree').data('zui.tree');
+
+            var myNewTreeData = result.tree;
+
+            myTree.reload(myNewTreeData);
+
+        } else {
+            vex.dialog.alert('操作失败');
+        }
+    },'json');
+}
+
+function delItems(value,element) {
+    if(!value) {
+        return false;
+    }
+    var id = $(element).attr('data-id');
+
+    var postData = {
+        id   : id
+    };
+
+    $.post('/index.php?c=Notes&a=delete',postData,function (result) {
+        if (result.status) { // 成功，重载树形结构
+
+            var myTree = $('#menu-tree').data('zui.tree');
+
+            var myNewTreeData = result.tree;
+
+            myTree.reload(myNewTreeData);
+
+        } else {
+            vex.dialog.alert(result.info);
+        }
+    },'json');
+}
+
+/**
+ * 新增笔记
+ *
+ * @param value
+ * @param element
+ * @returns {boolean}
+ */
+function createNewNote(value,element) {
+        if(!value) {
+            return false;
+        }
+        var pid = 0;
+
+        if($(element).attr('data-type') === 'dir') { // 是目录
+            pid = $(element).attr('data-id');
+        } else {
+            pid = $(element).attr('data-pid');
+        }
+
+        var postData = {
+            name : value,
+            pid  : pid,
+            type : 1
+        };
+
+        $.post('/index.php?c=Notes&a=create',postData,function (result) {
+            if (result.status) { // 成功，重载树形结构
+
+                var myTree = $('#menu-tree').data('zui.tree');
+
+                var myNewTreeData = result.tree;
+
+                myTree.reload(myNewTreeData);
+
+            } else {
+                vex.dialog.alert('添加失败');
+            }
+        },'json');
+
+    }
+
+    function createNewCategory(value,element) {
+        if(!value) {
+            return false;
+        }
+        var pid = 0;
+
+        if($(element).attr('data-type') === 'dir') { // 是目录
+            pid = $(element).attr('data-id');
+        } else {
+            pid = $(element).attr('data-pid');
+        }
+
+        var postData = {
+            name : value,
+            pid  : pid,
+            type : 0
+        };
+
+        $.post('/index.php?c=Notes&a=create',postData,function (result) {
+            if (result.status) { // 成功，重载树形结构
+
+                var myTree = $('#menu-tree').data('zui.tree');
+
+                var myNewTreeData = result.tree;
+
+                myTree.reload(myNewTreeData);
+
+            } else {
+                vex.dialog.alert('添加失败');
+            }
+        },'json');
+    }
+
+    function createNewRoot(value,element) {
+        if(!value) {
+            return false;
+        }
+        var pid = 0;
+
+        var postData = {
+            name : value,
+            pid  : pid,
+            type : 0
+        };
+
+        $.post('/index.php?c=Notes&a=create',postData,function (result) {
+            if (result.status) { // 成功，重载树形结构
+
+                var myTree = $('#menu-tree').data('zui.tree');
+
+                var myNewTreeData = result.tree;
+
+                myTree.reload(myNewTreeData);
+
+            } else {
+                vex.dialog.alert('添加失败');
+            }
+        },'json');
     }
 
 </script>

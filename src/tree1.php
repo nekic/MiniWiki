@@ -82,7 +82,7 @@ return array (
   ),
   11 => 
   array (
-    'title' => '测试重命名',
+    'title' => '测试',
     'pid' => '7',
     'id' => 11,
     'type' => 1,
@@ -150,30 +150,6 @@ return array (
     'pid' => '7',
     'id' => 19,
     'type' => 1,
-    'sort' => 0,
-  ),
-  20 => 
-  array (
-    'title' => '重命名分类',
-    'pid' => '6',
-    'id' => 20,
-    'type' => '0',
-    'sort' => 0,
-  ),
-  22 => 
-  array (
-    'title' => '测试分类',
-    'pid' => '20',
-    'id' => 22,
-    'type' => '0',
-    'sort' => 0,
-  ),
-  24 => 
-  array (
-    'title' => 'Python 编程',
-    'pid' => '0',
-    'id' => 24,
-    'type' => '0',
     'sort' => 0,
   ),
 );

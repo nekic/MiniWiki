@@ -1,0 +1,741 @@
+# 环境搭建
+
+## phalcon 安装
+
+Phalcon is an open source, full stack framework for PHP written as a C-extension, optimized for high performance. You don’t need to learn or use the C language, since the functionality is exposed as PHP classes ready for you to use. Phalcon also is loosely coupled, allowing you to use its objects as glue components based on the needs of your application.
+
+Phalcon is not only about performance, our goal is to make it robust, rich in features and easy to use!
+
+### Debian / Ubuntu[¶](https://docs.phalconphp.com/en/latest/reference/install.html#debian-ubuntu)
+
+* Debian/Ubuntu
+
+  ```shell
+  # Stable releases
+  curl -s https://packagecloud.io/install/repositories/phalcon/stable/script.deb.sh | sudo bash
+
+  # for PHP 7
+  sudo apt-get install php7.0-phalcon
+  ```
+
+## Nginx Installation Notes[¶](https://docs.phalconphp.com/en/latest/reference/nginx.html#nginx-installation-notes)
+
+[Nginx](http://wiki.nginx.org/Main) is a free, open-source, high-performance HTTP server and reverse proxy, as well as an IMAP/POP3 proxy server. Unlike traditional servers, [Nginx](http://wiki.nginx.org/Main) doesn’t rely on threads to handle requests. Instead it uses a much more scalable event-driven (asynchronous) architecture. This architecture uses small, but more importantly, predictable amounts of memory under load.
+
+The [PHP-FPM](http://php-fpm.org/) (FastCGI Process Manager) is usually used to allow [Nginx](http://wiki.nginx.org/Main) to process PHP files. Nowadays, [PHP-FPM](http://php-fpm.org/) is bundled with any Unix PHP distribution. Phalcon + [Nginx](http://wiki.nginx.org/Main) + [PHP-FPM](http://php-fpm.org/) provides a powerful set of tools that offer maximum performance for your PHP applications.
+
+## Configuring Nginx for Phalcon[¶](https://docs.phalconphp.com/en/latest/reference/nginx.html#configuring-nginx-for-phalcon)
+
+The following are potential configurations you can use to setup nginx with Phalcon:
+
+### Basic configuration[¶](https://docs.phalconphp.com/en/latest/reference/nginx.html#basic-configuration)
+
+Using `$_GET['_url']` as source of URIs:
+
+```nginx
+server {
+    listen 80;
+    server_name store.app;
+    root "/home/vagrant/Code/store/public";
+
+    index index.html index.htm index.php;
+
+    charset utf-8;
+
+    location / {
+        try_files $uri $uri/ /index.php?_url=$uri&$args;
+    }
+
+    location = /favicon.ico { access_log off; log_not_found off; }
+    location = /robots.txt  { access_log off; log_not_found off; }
+
+    access_log off;
+    error_log  /var/log/nginx/store.app-error.log error;
+
+    sendfile off;
+
+    client_max_body_size 100m;
+
+    location ~ \.php$ {
+        fastcgi_split_path_info ^(.+\.php)(/.+)$;
+        fastcgi_pass unix:/var/run/php/php7.0-fpm.sock;
+        fastcgi_index index.php;
+        include fastcgi_params;
+        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+
+        fastcgi_intercept_errors off;
+        fastcgi_buffer_size 16k;
+        fastcgi_buffers 4 16k;
+        fastcgi_connect_timeout 300;
+        fastcgi_send_timeout 300;
+        fastcgi_read_timeout 300;
+    }
+
+    location ~ /\.ht {
+        deny all;
+    }
+}
+```
+
+Using `$_SERVER['REQUEST_URI']` as source of URIs:
+
+```nginx
+server {
+    listen      80;
+    server_name localhost.dev;
+    root        /var/www/phalcon/public;
+    index       index.php index.html index.htm;
+    charset     utf-8;
+
+    location / {
+        try_files $uri $uri/ /index.php;
+    }
+
+    location ~ \.php$ {
+        try_files     $uri =404;
+
+        fastcgi_pass  127.0.0.1:9000;
+        fastcgi_index /index.php;
+
+        include fastcgi_params;
+        fastcgi_split_path_info       ^(.+\.php)(/.+)$;
+        fastcgi_param PATH_INFO       $fastcgi_path_info;
+        fastcgi_param PATH_TRANSLATED $document_root$fastcgi_path_info;
+        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+    }
+
+    location ~ /\.ht {
+        deny all;
+    }
+}
+```
+
+## Phalcon Developer Tools[¶](https://docs.phalconphp.com/en/latest/reference/tools.html#phalcon-developer-tools)
+
+注意：命令行已自动安装，这一步不需要操作
+
+These tools are a collection of useful scripts to generate skeleton code. Core components of your application can be generated with a simple command, allowing you to easily develop applications using Phalcon.
+
+> If you prefer to use the web version instead of the console, this [blog post](https://blog.phalconphp.com/post/dont-like-command-line-and-consoles-no-problem) offers more information.
+
+## Download[¶](https://docs.phalconphp.com/en/latest/reference/tools.html#download)
+
+You can download or clone a cross platform package containing the developer tools from [Github](https://github.com/phalcon/phalcon-devtools).
+
+### Installation[¶](https://docs.phalconphp.com/en/latest/reference/tools.html#installation)
+
+These are detailed instructions on how to install the developer tools on different platforms:
+
+- [Phalcon Developer Tools on Windows](https://docs.phalconphp.com/en/latest/reference/wintools.html)
+
+- [Phalcon Developer Tools on Mac OS X](https://docs.phalconphp.com/en/latest/reference/mactools.html)
+
+- [Phalcon Developer Tools on Linux](https://docs.phalconphp.com/en/latest/reference/linuxtools.html)
+
+  These steps will guide you through the process of installing Phalcon Developer Tools for Linux.
+
+  - Prerequisites[¶](https://docs.phalconphp.com/en/latest/reference/linuxtools.html#prerequisites)
+
+    The Phalcon PHP extension is required to run Phalcon Tools. If you haven’t installed it yet, please see the [*Installation*](https://docs.phalconphp.com/en/latest/reference/install.html) section for instructions.
+
+  - Download[¶](https://docs.phalconphp.com/en/latest/reference/linuxtools.html#download)
+
+    You can download a cross platform package containing the developer tools from the [Download](http://phalconphp.com/download) section. Also you can clone it from [Github](https://github.com/phalcon/phalcon-devtools).
+
+  Open a terminal and type the command below:
+
+  ```shell
+  git clone git://github.com/phalcon/phalcon-devtools.git
+  ```
+
+  Then enter the folder where the tools were cloned and execute ”`. ./phalcon.sh`”, (don’t forget the dot at beginning of the command):
+
+  ```shell
+  cd phalcon-devtools/
+
+  . ./phalcon.sh
+  ```
+
+  ​
+
+
+## 获取可用的命令[¶](https://docs.phalconphp.com/en/latest/reference/tools.html#getting-available-commands)
+
+You can get a list of available commands in Phalcon tools by typing: `phalcon commands`
+
+```shell
+vagrant@homestead:~$ phalcon commands
+
+Phalcon DevTools (3.1.1)
+
+Available commands:
+  info             (alias of: i)
+  commands         (alias of: list, enumerate)
+  controller       (alias of: create-controller)
+  module           (alias of: create-module)
+  model            (alias of: create-model)
+  all-models       (alias of: create-all-models)
+  project          (alias of: create-project)
+  scaffold         (alias of: create-scaffold)
+  migration        (alias of: create-migration)
+  webtools         (alias of: create-webtools)
+  console          (alias of: shell, psysh)
+
+vagrant@homestead:~$ 
+```
+
+## 生成项目骨架[¶](https://docs.phalconphp.com/en/latest/reference/tools.html#generating-a-project-skeleton)
+
+You can use Phalcon tools to generate pre-defined project skeletons for your applications with Phalcon framework. By default the project skeleton generator will use mod_rewrite for Apache. Type the following command on your web server document root:
+
+```shell
+$ pwd
+
+/Applications/MAMP/htdocs
+
+$ phalcon create-project store
+```
+
+The above recommended project structure was generated:
+
+```shell
+vagrant@homestead:~/Code$ tree store
+store
+├── app
+│   ├── config
+│   │   ├── config.php
+│   │   ├── loader.php
+│   │   ├── router.php
+│   │   └── services.php
+│   ├── controllers
+│   │   ├── ControllerBase.php
+│   │   └── IndexController.php
+│   ├── library
+│   ├── migrations
+│   ├── models
+│   └── views
+│       ├── index
+│       │   └── index.volt
+│       ├── index.volt
+│       └── layouts
+├── cache
+├── index.html
+└── public
+    ├── css
+    ├── files
+    ├── img
+    ├── index.php
+    ├── js
+    └── temp
+
+16 directories, 10 files
+vagrant@homestead:~/Code$ 
+```
+
+You could add the parameter *–help* to get help on the usage of a certain script:
+
+```shell
+vagrant@homestead:~/Code$ phalcon project --help
+
+Phalcon DevTools (3.1.1)
+
+Help:
+  Creates a project
+
+Usage:
+  project [name] [type] [directory] [enable-webtools]
+
+Arguments:
+  help	Shows this help text
+
+Example
+  phalcon project store simple
+
+Options:
+ --name               Name of the new project
+ --enable-webtools    Determines if webtools should be enabled [optional]
+ --directory=s        Base path on which project will be created [optional]
+ --type=s             Type of the application to be generated (cli, micro, simple, modules)
+ --template-path=s    Specify a template path [optional]
+ --use-config-ini     Use a ini file as configuration file [optional]
+ --trace              Shows the trace of the framework in case of exception [optional]
+ --help               Shows this help [optional]
+vagrant@homestead:~/Code$ 
+```
+
+Accessing the project from the web server will show you:
+
+![](/Users/nekic/Desktop/tool-1.png)
+
+## 生成控制器[¶](https://docs.phalconphp.com/en/latest/reference/tools.html#generating-controllers)
+
+The command “create-controller” generates controller skeleton structures. It’s important to invoke this command inside a directory that already has a Phalcon project.
+
+```shell
+$ phalcon create-controller --name test
+```
+
+The following code is generated by the script:
+
+```php
+<?php
+
+class TestController extends \Phalcon\Mvc\Controller
+{
+
+    public function indexAction()
+    {
+
+    }
+
+}
+```
+
+## 数据库连接配置[¶](https://docs.phalconphp.com/en/latest/reference/tools.html#preparing-database-settings)
+
+When a project is generated using developer tools. A configuration file can be found in *app/config/config.php* To generate models or scaffold, you will need to change the settings used to connect to your database.
+
+Change the database section in your config.php file:
+
+```php
+<?php
+/*
+ * Modified: prepend directory path of current file, 
+ * because of this file own different ENV under between Apache and command line.
+ * NOTE: please remove this comment.
+ */
+defined('BASE_PATH') || define('BASE_PATH', getenv('BASE_PATH') ?: realpath(dirname(__FILE__) . '/../..'));
+defined('APP_PATH') || define('APP_PATH', BASE_PATH . '/app');
+
+return new \Phalcon\Config([
+    'database' => [
+        'adapter'     => 'Mysql',
+        'host'        => 'localhost',
+        'username'    => 'root',
+        'password'    => '',
+        'dbname'      => 'test',
+        'charset'     => 'utf8',
+    ],
+    'application' => [
+        'appDir'         => APP_PATH . '/',
+        'controllersDir' => APP_PATH . '/controllers/',
+        'modelsDir'      => APP_PATH . '/models/',
+        'migrationsDir'  => APP_PATH . '/migrations/',
+        'viewsDir'       => APP_PATH . '/views/',
+        'pluginsDir'     => APP_PATH . '/plugins/',
+        'libraryDir'     => APP_PATH . '/library/',
+        'cacheDir'       => BASE_PATH . '/cache/',
+
+        // This allows the baseUri to be understand project paths that are not in the root directory
+        // of the webpspace.  This will break if the public/index.php entry point is moved or
+        // possibly if the web server rewrite rules are changed. This can also be set to a static path.
+        'baseUri'        => preg_replace('/public([\/\\\\])index.php$/', '', $_SERVER["PHP_SELF"]),
+    ]
+]);
+```
+
+## Generating Models[¶](https://docs.phalconphp.com/en/latest/reference/tools.html#generating-models)
+
+There are several ways to create models. You can create all models from the default database connection or some selectively. Models can have public attributes for the field representations or setters/getters can be used.
+
+Options:
+
+| --name=s          | Table name                               |
+| ----------------- | ---------------------------------------- |
+| --schema=s        | Name of the schema. [optional]           |
+| --namespace=s     | Model’s namespace [optional]             |
+| --get-set         | Attributes will be protected and have setters/getters. [optional] |
+| --extends=s       | Model extends the class name supplied [optional] |
+| --excludefields=l |                                          |
+|                   | Excludes fields defined in a comma separated list [optional] |
+| --doc             | Helps to improve code completion on IDEs [optional] |
+| --directory=s     | Base path on which project will be created [optional] |
+| --force           | Rewrite the model. [optional]            |
+| --trace           | Shows the trace of the framework in case of exception. [optional] |
+| --mapcolumn       | Get some code for map columns. [optional] |
+| --abstract        | Abstract Model [optional]                |
+
+
+
+The simplest way to generate a model is:
+
+```shell
+#$ phalcon model --name tablename
+$ phalcon model products
+```
+
+All table fields are declared public for direct access.
+
+```php
+<?php
+
+class Products extends \Phalcon\Mvc\Model
+{
+
+    /**
+     *
+     * @var integer
+     * @Primary
+     * @Identity
+     * @Column(type="integer", length=11, nullable=false)
+     */
+    public $id;
+
+    /**
+     *
+     * @var integer
+     * @Column(type="integer", length=11, nullable=false)
+     */
+    public $typesId;
+
+    /**
+     *
+     * @var string
+     * @Column(type="string", length=20, nullable=true)
+     */
+    public $name;
+
+    /**
+     *
+     * @var double
+     * @Column(type="double", length=10, nullable=true)
+     */
+    public $price;
+
+    /**
+     *
+     * @var integer
+     * @Column(type="integer", length=11, nullable=false)
+     */
+    public $quantity;
+
+    /**
+     *
+     * @var integer
+     * @Column(type="integer", length=4, nullable=false)
+     */
+    public $status;
+
+    /**
+     * Initialize method for model.
+     */
+    public function initialize()
+    {
+        $this->setSchema("store");
+    }
+
+    /**
+     * Returns table name mapped in the model.
+     *
+     * @return string
+     */
+    public function getSource()
+    {
+        return 'products';
+    }
+
+    /**
+     * Allows to query a set of records that match the specified conditions
+     *
+     * @param mixed $parameters
+     * @return Products[]|Products
+     */
+    public static function find($parameters = null)
+    {
+        return parent::find($parameters);
+    }
+
+    /**
+     * Allows to query the first record that match the specified conditions
+     *
+     * @param mixed $parameters
+     * @return Products
+     */
+    public static function findFirst($parameters = null)
+    {
+        return parent::findFirst($parameters);
+    }
+
+}
+
+```
+
+By adding the *–get-set* you can generate the fields with protected variables and public setter/getter methods. Those methods can help in business logic implementation within the setter/getter methods.
+
+```php
+<?php
+
+class Products extends \Phalcon\Mvc\Model
+{
+
+    /**
+     *
+     * @var integer
+     * @Primary
+     * @Identity
+     * @Column(type="integer", length=11, nullable=false)
+     */
+    protected $id;
+
+    /**
+     *
+     * @var integer
+     * @Column(type="integer", length=11, nullable=false)
+     */
+    protected $typesId;
+
+    /**
+     *
+     * @var string
+     * @Column(type="string", length=20, nullable=true)
+     */
+    protected $name;
+
+    /**
+     *
+     * @var double
+     * @Column(type="double", length=10, nullable=true)
+     */
+    protected $price;
+
+    /**
+     *
+     * @var integer
+     * @Column(type="integer", length=11, nullable=false)
+     */
+    protected $quantity;
+
+    /**
+     *
+     * @var integer
+     * @Column(type="integer", length=4, nullable=false)
+     */
+    protected $status;
+
+    /**
+     * Method to set the value of field id
+     *
+     * @param integer $id
+     * @return $this
+     */
+    public function setId($id)
+    {
+        $this->id = $id;
+
+        return $this;
+    }
+
+    /**
+     * Method to set the value of field typesId
+     *
+     * @param integer $typesId
+     * @return $this
+     */
+    public function setTypesId($typesId)
+    {
+        $this->typesId = $typesId;
+
+        return $this;
+    }
+
+    /**
+     * Method to set the value of field name
+     *
+     * @param string $name
+     * @return $this
+     */
+    public function setName($name)
+    {
+        $this->name = $name;
+
+        return $this;
+    }
+
+    /**
+     * Method to set the value of field price
+     *
+     * @param double $price
+     * @return $this
+     */
+    public function setPrice($price)
+    {
+        $this->price = $price;
+
+        return $this;
+    }
+
+    /**
+     * Method to set the value of field quantity
+     *
+     * @param integer $quantity
+     * @return $this
+     */
+    public function setQuantity($quantity)
+    {
+        $this->quantity = $quantity;
+
+        return $this;
+    }
+
+    /**
+     * Method to set the value of field status
+     *
+     * @param integer $status
+     * @return $this
+     */
+    public function setStatus($status)
+    {
+        $this->status = $status;
+
+        return $this;
+    }
+
+    /**
+     * Returns the value of field id
+     *
+     * @return integer
+     */
+    public function getId()
+    {
+        return $this->id;
+    }
+
+    /**
+     * Returns the value of field typesId
+     *
+     * @return integer
+     */
+    public function getTypesId()
+    {
+        return $this->typesId;
+    }
+
+    /**
+     * Returns the value of field name
+     *
+     * @return string
+     */
+    public function getName()
+    {
+        return $this->name;
+    }
+
+    /**
+     * Returns the value of field price
+     *
+     * @return double
+     */
+    public function getPrice()
+    {
+        return $this->price;
+    }
+
+    /**
+     * Returns the value of field quantity
+     *
+     * @return integer
+     */
+    public function getQuantity()
+    {
+        return $this->quantity;
+    }
+
+    /**
+     * Returns the value of field status
+     *
+     * @return integer
+     */
+    public function getStatus()
+    {
+        return $this->status;
+    }
+
+    /**
+     * Initialize method for model.
+     */
+    public function initialize()
+    {
+        $this->setSchema("store");
+    }
+
+    /**
+     * Returns table name mapped in the model.
+     *
+     * @return string
+     */
+    public function getSource()
+    {
+        return 'products';
+    }
+
+    /**
+     * Allows to query a set of records that match the specified conditions
+     *
+     * @param mixed $parameters
+     * @return Products[]|Products
+     */
+    public static function find($parameters = null)
+    {
+        return parent::find($parameters);
+    }
+
+    /**
+     * Allows to query the first record that match the specified conditions
+     *
+     * @param mixed $parameters
+     * @return Products
+     */
+    public static function findFirst($parameters = null)
+    {
+        return parent::findFirst($parameters);
+    }
+
+}
+
+```
+
+A nice feature of the model generator is that it keeps changes made by the developer between code generations. This allows the addition or removal of fields and properties, without worrying about losing changes made to the model itself. The following screencast shows you how it works:
+
+这里放一个视频文件
+
+## Scaffold a CRUD[¶](https://docs.phalconphp.com/en/latest/reference/tools.html#scaffold-a-crud)
+
+Scaffolding is a quick way to generate some of the major pieces of an application. If you want to create the models, views, and controllers for a new resource in a single operation, scaffolding is the tool for the job.
+
+Once the code is generated, it will have to be customized to meet your needs. Many developers avoid scaffolding entirely, opting to write all or most of their source code from scratch. The generated code can serve as a guide to better understand of how the framework works or develop prototypes. The code below shows a scaffold based on the table “products”:
+
+```shell
+$ phalcon scaffold --table-name products
+
+Phalcon DevTools (3.1.1)
+
+/home/vagrant/Code/store/app/controllers/ProductsController.php
+/home/vagrant/Code/store/app/views/layouts/products.phtml
+/home/vagrant/Code/store/app/views/products/index.phtml
+/home/vagrant/Code/store/app/views/products/search.phtml
+/home/vagrant/Code/store/app/views/products/new.phtml
+/home/vagrant/Code/store/app/views/products/edit.phtml
+```
+
+
+
+The scaffold generator will build several files in your application, along with some folders. Here’s a quick overview of what will be generated:
+
+| File                                   | Purpose                        |
+| -------------------------------------- | ------------------------------ |
+| app/controllers/ProductsController.php | The Products controller        |
+| app/models/Products.php                | The Products model             |
+| app/views/layout/products.phtml        | Controller layout for Products |
+| app/views/products/new.phtml           | View for the action “new”      |
+| app/views/products/edit.phtml          | View for the action “edit”     |
+| app/views/products/search.phtml        | View for the action “search”   |
+
+When browsing the recently generated controller, you will see a search form and a link to create a new Product:
+
+![tool-2](/Users/nekic/Desktop/tool-2.png)
+
+The “create page” allows you to create products applying validations on the Products model. Phalcon will automatically validate not null fields producing warnings if any of them is required.
+
+## Web Interface to Tools[¶](https://docs.phalconphp.com/en/latest/reference/tools.html#web-interface-to-tools)
+
+Also, if you prefer, it’s possible to use Phalcon Developer Tools from a web interface. Check out the following screencast to figure out how it works:
